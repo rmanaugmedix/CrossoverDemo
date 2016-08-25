@@ -3,12 +3,12 @@ package com.crossover.android;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
-import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.VolleyLog;
-import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.crossover.android.app.AppController;
 import com.crossover.android.utils.Constants;
 import com.google.android.gms.maps.GoogleMap;
@@ -21,6 +21,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
@@ -28,12 +31,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public float lang;
     public String name;
     public String id;
+    private String accessToken;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
+        accessToken = getIntent().getStringExtra("accessToken");
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -72,16 +78,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         //showpDialog();
 
-        JsonArrayRequest req = new JsonArrayRequest(Constants.URL_PLACES,
-                new Response.Listener<JSONArray>() {
-                    @Override
-                    public void onResponse(JSONArray response) {
-                        Log.d("LOG ", response.toString());
 
+        StringRequest postRequest = new StringRequest(Request.Method.GET, Constants.URL_PLACES,
+                new Response.Listener<String>()
+                {
+                    @Override
+                    public void onResponse(String strResponse) {
+                        // response
                         try {
-                            // Parsing json array response
-                            // loop through each json object
-                            String jsonResponse = "";
+
+                            Log.e("PLACE: ",strResponse);
+                            JSONArray response = new JSONArray(strResponse);
+
                             for (int i = 0; i < response.length(); i++) {
 
                                 JSONObject item = (JSONObject) response.get(i);
@@ -96,29 +104,30 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 mMap.addMarker(new MarkerOptions().position(tokyo).title(name));
 
                             }
-
-//                            txtResponse.setText(jsonResponse);
-
                         } catch (JSONException e) {
                             e.printStackTrace();
-                            Toast.makeText(getApplicationContext(),
-                                    "Error: " + e.getMessage(),
-                                    Toast.LENGTH_LONG).show();
                         }
-
-                        //hidepDialog();
                     }
-                }, new Response.ErrorListener() {
+                },
+                new Response.ErrorListener()
+                {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        // TODO Auto-generated method stub
+                        Log.d("ERROR","error => "+error.toString());
+                    }
+                }
+        ) {
             @Override
-            public void onErrorResponse(VolleyError error) {
-                VolleyLog.d("LOG", "Error: " + error.getMessage());
-                Toast.makeText(getApplicationContext(),
-                        error.getMessage(), Toast.LENGTH_SHORT).show();
-                //hidepDialog();
-            }
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String>  params = new HashMap<String, String>();
+                params.put("Authorization", accessToken);
 
-        });
+                return params;
+            }
+        };
+
         // Adding request to request queue
-        AppController.getInstance().addToRequestQueue(req);
+        AppController.getInstance().addToRequestQueue(postRequest);
     }
 }
