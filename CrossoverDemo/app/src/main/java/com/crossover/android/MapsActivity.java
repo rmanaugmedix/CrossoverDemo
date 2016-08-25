@@ -88,7 +88,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         try {
 
                             Log.e("PLACE: ",strResponse);
-                            JSONArray response = new JSONArray(strResponse);
+                            JSONObject jobj = new JSONObject(strResponse);
+                            String res = jobj.getString("results");
+                            JSONArray response = new JSONArray(res);
 
                             for (int i = 0; i < response.length(); i++) {
 
