@@ -15,13 +15,16 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
@@ -60,7 +63,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        makeJsonArrayRequest();
+        makeJsonArrayRequest(googleMap);
 
         // Add a marker in Sydney and move the camera
         LatLng tokyo = new LatLng(35.7090259, 139.7319925);
@@ -74,11 +77,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     /**
      * Method to make json array request where response starts with [
      * */
-    private void makeJsonArrayRequest() {
+    private void makeJsonArrayRequest(final GoogleMap myMap) {
 
         //showpDialog();
 
-
+        final List<Marker> markers = new ArrayList<Marker>();
         StringRequest postRequest = new StringRequest(Request.Method.GET, Constants.URL_PLACES,
                 new Response.Listener<String>()
                 {
@@ -102,8 +105,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                                 name = item.getString("name");
                                 id = item.getString("id");
-                                LatLng tokyo = new LatLng(lat, lang);
-                                mMap.addMarker(new MarkerOptions().position(tokyo).title(name));
+
+                                Marker marker = myMap.addMarker(new MarkerOptions().position(new LatLng(lat,lang)));
+                                markers.add(marker);
+                                /*LatLng tokyo = new LatLng(lat, lang);
+                                mMap.addMarker(new MarkerOptions().position(tokyo).title(name));*/
 
                             }
                         } catch (JSONException e) {
